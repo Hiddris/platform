@@ -13,7 +13,7 @@ terraform {
     region = "eu-central-1"
     dynamodb_table = "hisham-practice-state-locking"
     //encrypt = true
-    key = "terraform.tfstate"
+    key = "newserver.tfstate"
   }
 }
 
