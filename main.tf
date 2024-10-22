@@ -99,7 +99,7 @@ resource "aws_instance" "app_server" {
 #create private subnet
 resource "aws_subnet" "private_subnet" {
   vpc_id     = aws_vpc.hisham_vpc.id
-  cidr_block = "10.0.1.0/24"
+  cidr_block = "10.0.2.0/24"
   
   map_public_ip_on_launch = false 
   
@@ -156,37 +156,26 @@ resource "aws_security_group" "db_sg" {
 
 resource "aws_instance" "db_instance" {
   ami                    = "ami-0c55b159cbfafe1f0" # Amazon Linux 2 (use correct AMI for your region)
-  instance_type          = "t3.micro"
+  instance_type          = "t2.micro"
   subnet_id              = aws_subnet.private_subnet.id
   security_groups        = [aws_security_group.db_sg.name]
   associate_public_ip_address = false # Private subnet, no public IP
 
   key_name               = "hisham-db-key" 
 
+  user_data = <<-EOF
+    yum update -y
+    yum install -y mysql-server
+    systemctl start mysqld
+    systemctl enable mysqld
+    mysqladmin -u root password 'strong123'
+  EOF
+
   tags = {
     Name = "db-instance-hisham"
   }
 }
 
-#install sql with provisioner
-  provisioner "remote-exec" {
-    connection {
-      type        = "ssh"
-      user        = "ec2-user"
-      private_key = "hisham-db-key"
-      host        = self.private_ip
-    }
-
-    inline = [
-      # Install MySQL and start the service (Amazon Linux example)
-      "sudo yum update -y",
-      "sudo yum install -y mysql-server",
-      "sudo systemctl start mysqld",
-      "sudo systemctl enable mysqld",
-      # Set a root password (this is just an example, consider better security practices)
-      "sudo mysqladmin -u root password 'your-strong-password'"
-    ]
-  }
 
 
 
